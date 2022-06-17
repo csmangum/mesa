@@ -14,6 +14,7 @@ LABEL maintainer="rht <rhtbot@protonmail.com>"
 # `docker run --name mymesa_instance -p 8521:8521 -e MODEL_DIR=examples/sugarscape_cg -it mymesa_image`
 # Note: the model directory MUST contain a run.py file.
 
+RUN git clone https://github.com/projectmesa/mesa.git
 ENV MODEL_DIR=examples/wolf_sheep
 
 # Don't buffer output:

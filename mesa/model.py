@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import random
 
-from mesa.datacollection import DataCollector
+s
 
 # mypy
 from typing import Any
@@ -49,6 +49,7 @@ class Model:
 
     def step(self) -> None:
         """A single step. Fill in here."""
+        #? Where is the step function called?
         pass
 
     def next_id(self) -> int:
