@@ -115,6 +115,6 @@ class Food(mesa.Agent):
             if self.countdown <= 0:
                 # Set as fully grown
                 self.fully_grown = True
-                self.countdown = self.model.grass_regrowth_time
+                self.countdown = self.model.food_regrowth_time
             else:
                 self.countdown -= 1
