@@ -1,8 +1,8 @@
 import mesa
-from wolf_sheep.random_walk import RandomWalker
+from dooders.random_walk import RandomWalker
 
 
-class Dooder(RandomWalker):
+class Prey(RandomWalker):
     """
     A sheep that walks around, reproduces (asexually) and gets eaten.
 
@@ -22,16 +22,16 @@ class Dooder(RandomWalker):
         self.random_move()
         living = True
 
-        if self.model.grass:
+        if self.model.food:
             # Reduce energy
             self.energy -= 1
 
             # If there is grass available, eat it
             this_cell = self.model.grid.get_cell_list_contents([self.pos])
-            grass_patch = [obj for obj in this_cell if isinstance(obj, GrassPatch)][0]
-            if grass_patch.fully_grown:
+            food_object = [obj for obj in this_cell if isinstance(obj, Food)][0]
+            if food_object.fully_grown:
                 self.energy += self.model.sheep_gain_from_food
-                grass_patch.fully_grown = False
+                food_object.fully_grown = False
 
             # Death
             if self.energy < 0:
@@ -41,16 +41,16 @@ class Dooder(RandomWalker):
 
         if living and self.random.random() < self.model.sheep_reproduce:
             # Create a new sheep:
-            if self.model.grass:
+            if self.model.food:
                 self.energy /= 2
-            lamb = Sheep(
+            baby = Prey(
                 self.model.next_id(), self.pos, self.model, self.moore, self.energy
             )
-            self.model.grid.place_agent(lamb, self.pos)
-            self.model.schedule.add(lamb)
+            self.model.grid.place_agent(baby, self.pos)
+            self.model.schedule.add(baby)
 
 
-class Wolf(RandomWalker):
+class Predator(RandomWalker):
     """
     A wolf that walks around, reproduces (asexually) and eats sheep.
     """
@@ -68,14 +68,14 @@ class Wolf(RandomWalker):
         # If there are sheep present, eat one
         x, y = self.pos
         this_cell = self.model.grid.get_cell_list_contents([self.pos])
-        sheep = [obj for obj in this_cell if isinstance(obj, Sheep)]
-        if len(sheep) > 0:
-            sheep_to_eat = self.random.choice(sheep)
+        prey = [obj for obj in this_cell if isinstance(obj, Prey)]
+        if len(prey) > 0:
+            prey_to_eat = self.random.choice(prey)
             self.energy += self.model.wolf_gain_from_food
 
             # Kill the sheep
-            self.model.grid.remove_agent(sheep_to_eat)
-            self.model.schedule.remove(sheep_to_eat)
+            self.model.grid.remove_agent(prey_to_eat)
+            self.model.schedule.remove(prey_to_eat)
 
         # Death or reproduction
         if self.energy < 0:
@@ -85,14 +85,14 @@ class Wolf(RandomWalker):
             if self.random.random() < self.model.wolf_reproduce:
                 # Create a new wolf cub
                 self.energy /= 2
-                cub = Wolf(
+                cub = Predator(
                     self.model.next_id(), self.pos, self.model, self.moore, self.energy
                 )
                 self.model.grid.place_agent(cub, cub.pos)
                 self.model.schedule.add(cub)
 
 
-class GrassPatch(mesa.Agent):
+class Food(mesa.Agent):
     """
     A patch of grass that grows at a fixed rate and it is eaten by sheep
     """

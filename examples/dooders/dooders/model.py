@@ -11,8 +11,8 @@ Replication of the model found in NetLogo:
 
 import mesa
 
-from dooder.scheduler import RandomActivationByTypeFiltered
-from dooder.agents import Dooder
+from dooders.scheduler import RandomActivationByTypeFiltered
+from dooders.agents import Prey, Predator, Food
 
 
 class DooderSim(mesa.Model):
@@ -23,17 +23,17 @@ class DooderSim(mesa.Model):
     height = 20
     width = 20
 
-    initial_sheep = 100
-    initial_wolves = 50
+    initial_prey = 100
+    initial_predator = 50
 
-    sheep_reproduce = 0.04
-    wolf_reproduce = 0.05
+    prey_reproduce = 0.04
+    predator_reproduce = 0.05
 
-    wolf_gain_from_food = 20
+    predator_gain_from_food = 20
 
-    grass = False
-    grass_regrowth_time = 30
-    sheep_gain_from_food = 4
+    food = False
+    food_regrowth_time = 30
+    prey_gain_from_food = 4
 
     verbose = False  # Print-monitoring
 
@@ -45,84 +45,84 @@ class DooderSim(mesa.Model):
         self,
         width=20,
         height=20,
-        initial_sheep=100,
-        initial_wolves=50,
-        sheep_reproduce=0.04,
-        wolf_reproduce=0.05,
-        wolf_gain_from_food=20,
-        grass=False,
-        grass_regrowth_time=30,
-        sheep_gain_from_food=4,
+        initial_prey=100,
+        initial_predator=50,
+        prey_reproduce=0.04,
+        predator_reproduce=0.05,
+        predator_gain_from_food=20,
+        food=False,
+        food_regrowth_time=30,
+        prey_gain_from_food=4,
     ):
         """
         Create a new Wolf-Sheep model with the given parameters.
 
         Args:
-            initial_sheep: Number of sheep to start with
-            initial_wolves: Number of wolves to start with
+            initial_prey: Number of sheep to start with
+            initial_predator: Number of wolves to start with
             sheep_reproduce: Probability of each sheep reproducing each step
-            wolf_reproduce: Probability of each wolf reproducing each step
-            wolf_gain_from_food: Energy a wolf gains from eating a sheep
+            predator_reproduce: Probability of each wolf reproducing each step
+            predator_gain_from_food: Energy a wolf gains from eating a sheep
             grass: Whether to have the sheep eat grass for energy
-            grass_regrowth_time: How long it takes for a grass patch to regrow
+            food_regrowth_time: How long it takes for a grass patch to regrow
                                  once it is eaten
-            sheep_gain_from_food: Energy sheep gain from grass, if enabled.
+            prey_gain_from_food: Energy sheep gain from grass, if enabled.
         """
         super().__init__()
         # Set parameters
         self.width = width
         self.height = height
-        self.initial_sheep = initial_sheep
-        self.initial_wolves = initial_wolves
-        self.sheep_reproduce = sheep_reproduce
-        self.wolf_reproduce = wolf_reproduce
-        self.wolf_gain_from_food = wolf_gain_from_food
-        self.grass = grass
-        self.grass_regrowth_time = grass_regrowth_time
-        self.sheep_gain_from_food = sheep_gain_from_food
+        self.initial_prey = initial_prey
+        self.initial_predator = initial_predator
+        self.prey_reproduce = prey_reproduce
+        self.predator_reproduce = predator_reproduce
+        self.predator_gain_from_food = predator_gain_from_food
+        self.food = food
+        self.food_regrowth_time = food_regrowth_time
+        self.prey_gain_from_food = prey_gain_from_food
 
         self.schedule = RandomActivationByTypeFiltered(self)
         self.grid = mesa.space.MultiGrid(self.width, self.height, torus=True)
         self.datacollector = mesa.DataCollector(
             {
-                "Wolves": lambda m: m.schedule.get_type_count(Wolf),
-                "Sheep": lambda m: m.schedule.get_type_count(Sheep),
-                "Grass": lambda m: m.schedule.get_type_count(
-                    GrassPatch, lambda x: x.fully_grown
+                "Predator": lambda m: m.schedule.get_type_count(Predator),
+                "Prey": lambda m: m.schedule.get_type_count(Prey),
+                "Food": lambda m: m.schedule.get_type_count(
+                    Food, lambda x: x.fully_grown
                 ),
             }
         )
 
-        # Create sheep:
-        for i in range(self.initial_sheep):
+        # Create prey:
+        for i in range(self.initial_prey):
             x = self.random.randrange(self.width)
             y = self.random.randrange(self.height)
-            energy = self.random.randrange(2 * self.sheep_gain_from_food)
-            sheep = Sheep(self.next_id(), (x, y), self, True, energy)
-            self.grid.place_agent(sheep, (x, y))
-            self.schedule.add(sheep)
+            energy = self.random.randrange(2 * self.prey_gain_from_food)
+            prey = Prey(self.next_id(), (x, y), self, True, energy)
+            self.grid.place_agent(prey, (x, y))
+            self.schedule.add(prey)
 
-        # Create wolves
-        for i in range(self.initial_wolves):
+        # Create predators
+        for i in range(self.initial_predator):
             x = self.random.randrange(self.width)
             y = self.random.randrange(self.height)
-            energy = self.random.randrange(2 * self.wolf_gain_from_food)
-            wolf = Wolf(self.next_id(), (x, y), self, True, energy)
-            self.grid.place_agent(wolf, (x, y))
-            self.schedule.add(wolf)
+            energy = self.random.randrange(2 * self.predator_gain_from_food)
+            predator = Predator(self.next_id(), (x, y), self, True, energy)
+            self.grid.place_agent(predator, (x, y))
+            self.schedule.add(predator)
 
-        # Create grass patches
-        if self.grass:
+        # Create food
+        if self.food:
             for agent, x, y in self.grid.coord_iter():
 
                 fully_grown = self.random.choice([True, False])
 
                 if fully_grown:
-                    countdown = self.grass_regrowth_time
+                    countdown = self.food_regrowth_time
                 else:
-                    countdown = self.random.randrange(self.grass_regrowth_time)
+                    countdown = self.random.randrange(self.food_regrowth_time)
 
-                patch = GrassPatch(self.next_id(), (x, y), self, fully_grown, countdown)
+                patch = Food(self.next_id(), (x, y), self, fully_grown, countdown)
                 self.grid.place_agent(patch, (x, y))
                 self.schedule.add(patch)
 
@@ -137,20 +137,20 @@ class DooderSim(mesa.Model):
             print(
                 [
                     self.schedule.time,
-                    self.schedule.get_type_count(Wolf),
-                    self.schedule.get_type_count(Sheep),
-                    self.schedule.get_type_count(GrassPatch, lambda x: x.fully_grown),
+                    self.schedule.get_type_count(Predator),
+                    self.schedule.get_type_count(Prey),
+                    self.schedule.get_type_count(Food, lambda x: x.fully_grown),
                 ]
             )
 
     def run_model(self, step_count=200):
 
         if self.verbose:
-            print("Initial number wolves: ", self.schedule.get_type_count(Wolf))
-            print("Initial number sheep: ", self.schedule.get_type_count(Sheep))
+            print("Initial number predators: ", self.schedule.get_type_count(Predator))
+            print("Initial number prey: ", self.schedule.get_type_count(Prey))
             print(
-                "Initial number grass: ",
-                self.schedule.get_type_count(GrassPatch, lambda x: x.fully_grown),
+                "Initial number food: ",
+                self.schedule.get_type_count(Food, lambda x: x.fully_grown),
             )
 
         for i in range(step_count):
@@ -158,9 +158,9 @@ class DooderSim(mesa.Model):
 
         if self.verbose:
             print("")
-            print("Final number wolves: ", self.schedule.get_type_count(Wolf))
-            print("Final number sheep: ", self.schedule.get_type_count(Sheep))
+            print("Final number predators: ", self.schedule.get_type_count(Predator))
+            print("Final number prey: ", self.schedule.get_type_count(Prey))
             print(
-                "Final number grass: ",
-                self.schedule.get_type_count(GrassPatch, lambda x: x.fully_grown),
+                "Final number food: ",
+                self.schedule.get_type_count(Food, lambda x: x.fully_grown),
             )
