@@ -30,7 +30,7 @@ class Prey(RandomWalker):
             this_cell = self.model.grid.get_cell_list_contents([self.pos])
             food_object = [obj for obj in this_cell if isinstance(obj, Food)][0]
             if food_object.fully_grown:
-                self.energy += self.model.sheep_gain_from_food
+                self.energy += self.model.prey_gain_from_food
                 food_object.fully_grown = False
 
             # Death
@@ -39,7 +39,7 @@ class Prey(RandomWalker):
                 self.model.schedule.remove(self)
                 living = False
 
-        if living and self.random.random() < self.model.sheep_reproduce:
+        if living and self.random.random() < self.model.prey_reproduce:
             # Create a new sheep:
             if self.model.food:
                 self.energy /= 2
@@ -71,7 +71,7 @@ class Predator(RandomWalker):
         prey = [obj for obj in this_cell if isinstance(obj, Prey)]
         if len(prey) > 0:
             prey_to_eat = self.random.choice(prey)
-            self.energy += self.model.wolf_gain_from_food
+            self.energy += self.model.predator_gain_from_food
 
             # Kill the sheep
             self.model.grid.remove_agent(prey_to_eat)
@@ -82,7 +82,7 @@ class Predator(RandomWalker):
             self.model.grid.remove_agent(self)
             self.model.schedule.remove(self)
         else:
-            if self.random.random() < self.model.wolf_reproduce:
+            if self.random.random() < self.model.predator_reproduce:
                 # Create a new wolf cub
                 self.energy /= 2
                 cub = Predator(
